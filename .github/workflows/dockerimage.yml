@@ -9,12 +9,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
-    - name: Push to GitHub Registry
-      uses: docker/build-push-action@v1
+    - uses: actions/checkout@v2
+    - name: Log in to GitHub container registry
+      uses: docker/login-action@v1.10.0
       with:
+        registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-        registry: docker.pkg.github.com
-        repository: jessedearing/taskwarrior-ui-container
-        tag_with_ref: true
+    - name: Extract metadata for image
+      id: meta
+      uses: docker/metadata-action@v3.6.1
+      with:
+        images: |
+          ghcr.io/${{ github.repository }}
+    - name: Build and Push to GitHub Registry
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
